@@ -34,6 +34,69 @@ extension CartLines on List<CartLine> {
   List<CartLine> without(String productId) =>
       [for (final l in this) if (l.product.id != productId) l];
 
+  List<CartLine> changeQty(String productId, int delta) {
+    return [
+      for (final l in this)
+        if (l.product.id == productId)
+          if (l.qty + delta > 0) l.copyWith(qty: l.qty + delta) else null
+        else
+          l
+    ].whereType<CartLine>().toList();
+  }
+
   double get subtotal => fold(0, (s, l) => s + l.subtotal);
   int get itemCount => fold(0, (s, l) => s + l.qty);
 }
+
+class CartState {
+  const CartState({
+    this.lines = const [],
+    this.coupon,
+    this.couponError,
+    this.status = CheckoutStatus.idle,
+    this.orderId,
+    this.checkoutError,
+    this.history = const [],
+  });
+
+  final List<CartLine> lines;
+  final String? coupon;
+  final String? couponError;
+  final CheckoutStatus status;
+  final String? orderId;
+  final String? checkoutError;
+  final List<CartState> history;
+
+  // Derived values (T3)
+  int get itemCount => lines.itemCount;
+  double get subtotal => lines.subtotal;
+  
+  double get discount {
+    if (coupon == 'SAVE10') return subtotal * 0.10;
+    return 0.0;
+  }
+
+  double get total => subtotal - discount;
+
+  CartState copyWith({
+    List<CartLine>? lines,
+    String? coupon,
+    String? couponError,
+    CheckoutStatus? status,
+    String? orderId,
+    String? checkoutError,
+    List<CartState>? history,
+  }) {
+    return CartState(
+      lines: lines ?? this.lines,
+      coupon: coupon ?? this.coupon,
+      couponError: couponError,
+      status: status ?? this.status,
+      orderId: orderId ?? this.orderId,
+      checkoutError: checkoutError,
+      history: history ?? this.history,
+    );
+  }
+}
+
+enum CheckoutStatus { idle, submitting, success, failure }
