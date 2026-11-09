@@ -67,7 +67,7 @@ class CartState {
   final String? checkoutError;
   final List<CartState> history;
 
-  // Derived values (T3)
+  // Derived values(T3)
   int get itemCount => lines.itemCount;
   double get subtotal => lines.subtotal;
   
