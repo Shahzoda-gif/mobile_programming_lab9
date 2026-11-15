@@ -97,6 +97,27 @@ class CartState {
       history: history ?? this.history,
     );
   }
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is CartState &&
+        other.lines.toString() == lines.toString() &&
+        other.coupon == coupon &&
+        other.couponError == couponError &&
+        other.status == status &&
+        other.orderId == orderId &&
+        other.checkoutError == checkoutError;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        lines.toString(),
+        coupon,
+        couponError,
+        status,
+        orderId,
+        checkoutError,
+      );
 }
 
 enum CheckoutStatus { idle, submitting, success, failure }
