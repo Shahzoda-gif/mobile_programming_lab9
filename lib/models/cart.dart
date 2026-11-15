@@ -3,7 +3,19 @@ class Product {
   final String id;
   final String name;
   final double price;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Product &&
+          other.id == id &&
+          other.name == name &&
+          other.price == price;
+
+  @override
+  int get hashCode => Object.hash(id, name, price);
 }
+
 
 const catalog = [
   Product(id: 'p1', name: 'Keyboard', price: 49),
@@ -19,6 +31,14 @@ class CartLine {
   double get subtotal => product.price * qty;
 
   CartLine copyWith({int? qty}) => CartLine(product: product, qty: qty ?? this.qty);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CartLine && other.product == product && other.qty == qty;
+
+  @override
+  int get hashCode => Object.hash(product, qty);
 }
 
 extension CartLines on List<CartLine> {
@@ -48,6 +68,8 @@ extension CartLines on List<CartLine> {
   int get itemCount => fold(0, (s, l) => s + l.qty);
 }
 
+const _unset = Object();
+
 class CartState {
   const CartState({
     this.lines = const [],
@@ -67,10 +89,9 @@ class CartState {
   final String? checkoutError;
   final List<CartState> history;
 
-  // Derived values(T3)
   int get itemCount => lines.itemCount;
   double get subtotal => lines.subtotal;
-  
+
   double get discount {
     if (coupon == 'SAVE10') return subtotal * 0.10;
     return 0.0;
@@ -80,43 +101,52 @@ class CartState {
 
   CartState copyWith({
     List<CartLine>? lines,
-    String? coupon,
-    String? couponError,
+    Object? coupon = _unset,
+    Object? couponError = _unset,
     CheckoutStatus? status,
-    String? orderId,
-    String? checkoutError,
+    Object? orderId = _unset,
+    Object? checkoutError = _unset,
     List<CartState>? history,
   }) {
     return CartState(
       lines: lines ?? this.lines,
-      coupon: coupon ?? this.coupon,
-      couponError: couponError,
+      coupon: coupon == _unset ? this.coupon : coupon as String?,
+      couponError:
+          couponError == _unset ? this.couponError : couponError as String?,
       status: status ?? this.status,
-      orderId: orderId ?? this.orderId,
-      checkoutError: checkoutError,
+      orderId: orderId == _unset ? this.orderId : orderId as String?,
+      checkoutError: checkoutError == _unset
+          ? this.checkoutError
+          : checkoutError as String?,
       history: history ?? this.history,
     );
   }
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is CartState &&
-        other.lines.toString() == lines.toString() &&
-        other.coupon == coupon &&
+    if (other is! CartState) return false;
+    if (lines.length != other.lines.length) return false;
+    for (var i = 0; i < lines.length; i++) {
+      if (lines[i] != other.lines[i]) return false;
+    }
+    return other.coupon == coupon &&
         other.couponError == couponError &&
         other.status == status &&
         other.orderId == orderId &&
-        other.checkoutError == checkoutError;
+        other.checkoutError == checkoutError &&
+        other.history.length == history.length;
   }
 
   @override
   int get hashCode => Object.hash(
-        lines.toString(),
+        Object.hashAll(lines),
         coupon,
         couponError,
         status,
         orderId,
         checkoutError,
+        history.length,
       );
 }
 
